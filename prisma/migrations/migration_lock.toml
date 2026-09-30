@@ -1,0 +1,2 @@
+# This directory intentionally contains PostgreSQL-only production migrations.
+provider = "postgresql"

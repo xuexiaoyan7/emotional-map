@@ -1,0 +1,21 @@
+:root {
+  --paper: #f7f3eb;
+  --paper-deep: #ece3d5;
+  --surface: #fffdf8;
+  --ink: #26302d;
+  --ink-soft: #536059;
+  --muted: #777b72;
+  --hairline: #d6cfc2;
+  --shadow-paper: 0 16px 40px rgba(55, 47, 37, .13);
+  --shadow-trace: 0 0 0 6px color-mix(in srgb, var(--trace) 14%, transparent), 0 0 28px 7px color-mix(in srgb, var(--trace) 34%, transparent);
+  --radius-sm: .25rem;
+  --radius-md: .7rem;
+  --space-1: .5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4.5rem;
+  --font-display: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ease-gentle: 420ms cubic-bezier(.2,.7,.2,1);
+}

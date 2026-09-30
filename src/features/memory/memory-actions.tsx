@@ -1,0 +1,4 @@
+"use client";
+import Link from "next/link";
+import { useState } from "react";
+export function MemoryActions({ memoryId }: { memoryId: string }) { const [busy, setBusy] = useState(false); async function remove() { if (!window.confirm("Delete this memory? Its photo and record will be removed from this local project.")) return; setBusy(true); const response = await fetch(`/api/memories/${memoryId}`, { method: "DELETE" }); if (response.ok) window.location.assign("/"); else { setBusy(false); window.alert("This memory could not be deleted."); } } return <div className="memory-actions"><Link className="secondary-action" href={`/memories/${memoryId}/edit`}>Edit memory</Link><button className="text-button danger" disabled={busy} onClick={remove}>{busy ? "Deleting…" : "Delete memory"}</button></div>; }

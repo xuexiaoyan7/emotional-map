@@ -1,0 +1,149 @@
+generator client {
+  provider      = "prisma-client-js"
+  // Local development runs on Apple Silicon; Netlify Functions run on Linux.
+  // Generate both engines so server-side routes (including email OTP) work in
+  // each environment without relying on the host machine's Prisma cache.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum ReactionKind {
+  FELT_THIS
+  HUG
+  BEEN_THERE
+}
+
+model User {
+  id          String     @id @default(cuid())
+  phone       String?    @unique
+  email       String?    @unique
+  displayName String?
+  mapName     String?
+  publicSlug  String?    @unique
+  avatarUrl   String?
+  handle      String?    @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+  memories    Memory[]
+  comments    Comment[]
+  likes       Like[]
+  reactions   Reaction[]
+  emailOtps   EmailOtp[]
+}
+
+model EmailOtp {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  consumedAt DateTime?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
+model Memory {
+  id           String          @id @default(cuid())
+  userId       String
+  photoUrl     String
+  photoMetadata Json?
+  locationId   String
+  capturedAt   DateTime?
+  story        String          @default("")
+  visibility   Visibility      @default(PRIVATE)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location     Location        @relation(fields: [locationId], references: [id])
+  emotions     MemoryEmotion[]
+  comments     Comment[]
+  likes        Like[]
+  reactions    Reaction[]
+
+  @@index([userId, createdAt])
+  @@index([visibility, createdAt])
+  @@index([locationId, capturedAt])
+}
+
+model Location {
+  id        String   @id @default(cuid())
+  placeName String
+  city      String
+  country   String
+  latitude  Float?
+  longitude Float?
+  providerId String?
+  createdAt DateTime @default(now())
+  memories  Memory[]
+
+  @@index([city, country])
+}
+
+model Emotion {
+  id            String          @id @default(cuid())
+  canonicalName String          @unique
+  category      String?
+  color         String?
+  createdAt     DateTime        @default(now())
+  memories      MemoryEmotion[]
+}
+
+model MemoryEmotion {
+  memoryId         String
+  emotionId        String
+  intensity        Int
+  customExpression String?
+  memory           Memory  @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  emotion          Emotion @relation(fields: [emotionId], references: [id])
+
+  @@id([memoryId, emotionId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  memoryId  String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  memory    Memory   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([memoryId, createdAt])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  memoryId  String
+  userId    String
+  createdAt DateTime @default(now())
+  memory    Memory   @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memoryId, userId])
+}
+
+model Reaction {
+  id        String       @id @default(cuid())
+  memoryId  String
+  userId    String
+  kind      ReactionKind
+  createdAt DateTime     @default(now())
+  memory    Memory       @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([memoryId, userId, kind])
+}

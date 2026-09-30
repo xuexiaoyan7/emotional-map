@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { getCurrentUser } from "@/server/auth";
+import { db } from "@/server/db";
+import { ensureStandardEmotions } from "@/server/emotions";
+import { EditMemoryForm } from "@/features/memory/edit-memory-form";
+export default async function EditMemory({ params }: { params: Promise<{ memoryId: string }> }) { const user = await getCurrentUser(); if (!user) redirect("/login"); const { memoryId } = await params; const [memory, emotions] = await Promise.all([db.memory.findFirst({ where: { id: memoryId, userId: user.id }, include: { location: true, emotions: true } }), ensureStandardEmotions()]); if (!memory) notFound(); return <main className="record-page"><Link className="wordmark" href={`/memories/${memory.id}`}>← Back to memory</Link><header><p className="eyebrow">Keep the meaning, refine the details</p><h1>Edit memory.</h1></header><EditMemoryForm emotions={emotions} memory={{ id: memory.id, photoUrl: memory.photoUrl, photoMetadata: (memory.photoMetadata as Record<string, unknown>) ?? {}, capturedAt: memory.capturedAt?.toISOString().slice(0, 10) ?? "", story: memory.story, visibility: memory.visibility, location: memory.location, emotions: memory.emotions.map((emotion) => ({ emotionId: emotion.emotionId, intensity: emotion.intensity, customExpression: emotion.customExpression ?? "" })) }} /></main>; }
